@@ -51,7 +51,7 @@ begin
       exit 1
     end
   end
-rescue RuntmeError => e
+rescue RuntimeError => e
   $log.error(e)
   exit 1
 end
