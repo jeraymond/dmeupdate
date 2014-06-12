@@ -24,7 +24,7 @@ UPDATE_URL = 'https://cp.dnsmadeeasy.com/servlet/updateip'
 begin
   script_dir = File.join(File.dirname(File.expand_path(__FILE__)))
 
-  $log = Logger.new("#{script_dir}/dmeupdate.log", 'daily')
+  $log = Logger.new("#{script_dir}/dmeupdate.log", 'weekly')
   $log.formatter = proc do |severity, datetime, progname, msg|
     formatted_date = datetime.strftime("%Y-%m-%dT%H:%M:%S %Z")
     "#{formatted_date} - #{severity}: #{msg}\n"
