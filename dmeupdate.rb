@@ -50,8 +50,8 @@ begin
         $log.info "Successfully updated record_id=#{record_id} " \
                   "http_response_body=#{response.body}"
       else
-        $log.error "Update request failed. HTTP #{response.code} " \
-                   "#{response.body}"
+        $log.error "Update request failed for record_id=#{record_id} " \
+                   "HTTP #{response.code} #{response.body}"
         exit_code = 1
       end
     end
