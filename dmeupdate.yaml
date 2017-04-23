@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ###############################################################################
-:username: <username>
-:password: <password>
-:record_id: <record id>
+---
+:records:
+- :username: <username>
+  :password: <password>
+  :record_id: <record id>
+
+- :username: <username2>
+  :password: <password2>
+  :record_id: <record id2>

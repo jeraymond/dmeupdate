@@ -31,26 +31,32 @@ begin
   end
 
   config = YAML::load_file(File.join(script_dir, 'dmeupdate.yaml'))
-  username = config[:username]
-  password = config[:password]
-  record_id = config[:record_id]
-  ip_address = Net::HTTP.get(URI(EXT_IP_URL))
-  uri = URI("#{UPDATE_URL}?username=#{username}&password=#{password}" \
-            "&id=#{record_id}&ip=#{ip_address}")
+  exit_code = 0
+  config[:records].each do |record|
+    username = record[:username]
+    password = record[:password]
+    record_id = record[:record_id]
+    ip_address = Net::HTTP.get(URI(EXT_IP_URL))
+    uri = URI("#{UPDATE_URL}?username=#{username}&password=#{password}" \
+              "&id=#{record_id}&ip=#{ip_address}")
 
-  # To fix SSL verification problems
-  # ruby -ropenssl -e "p OpenSSL::X509::DEFAULT_CERT_FILE"
-  # wget -O /etc/ssl/cert.pem http://curl.haxx.se/ca/cacert.pem
-  Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
-    request = Net::HTTP::Get.new uri.request_uri
-    response = http.request request
-    if response.is_a?  Net::HTTPOK
-      $log.info response.body
-    else
-      $log.error "Update request failed. HTTP #{response.code} #{response.body}"
-      exit 1
+    # To fix SSL verification problems
+    # ruby -ropenssl -e "p OpenSSL::X509::DEFAULT_CERT_FILE"
+    # wget -O /etc/ssl/cert.pem http://curl.haxx.se/ca/cacert.pem
+    Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
+      request = Net::HTTP::Get.new uri.request_uri
+      response = http.request request
+      if response.is_a? Net::HTTPOK and "success".eql? response.body
+        $log.info "Successfully updated record_id=#{record_id} " \
+                  "http_response_body=#{response.body}"
+      else
+        $log.error "Update request failed. HTTP #{response.code} " \
+                   "#{response.body}"
+        exit_code = 1
+      end
     end
   end
+  exit exit_code
 rescue RuntimeError => e
   $log.error(e)
   exit 1
