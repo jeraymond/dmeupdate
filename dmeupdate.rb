@@ -18,7 +18,9 @@ require 'logger'
 require 'net/http'
 require 'yaml'
 
-EXT_IP_URL = 'http://www.dnsmadeeasy.com/myip.jsp'
+# EXT_IP_URL = 'http://www.dnsmadeeasy.com/myip.jsp'
+# myexternalip seems to be more reliable than dnsmadeeasy myip
+EXT_IP_URL = 'https://myexternalip.com/raw'
 UPDATE_URL = 'https://cp.dnsmadeeasy.com/servlet/updateip'
 
 begin
@@ -32,11 +34,25 @@ begin
 
   config = YAML::load_file(File.join(script_dir, 'dmeupdate.yaml'))
   exit_code = 0
+  $log.info "Starting record updates"
   config[:records].each do |record|
     username = record[:username]
     password = record[:password]
     record_id = record[:record_id]
-    ip_address = Net::HTTP.get(URI(EXT_IP_URL))
+    $log.info "Updating record #{record_id}"
+    
+    ip_response = Net::HTTP.get_response(URI(EXT_IP_URL))
+    if ip_response.is_a? Net::HTTPOK
+      ip_address = ip_response.body
+      ip_address.strip!
+      $log.info "Found external ip_address='#{ip_address}'"
+    else
+      $log.error "Failed to get external IP address"
+      $log.error ip_response.body
+      exit_code = 1
+      next
+    end
+    
     uri = URI("#{UPDATE_URL}?username=#{username}&password=#{password}" \
               "&id=#{record_id}&ip=#{ip_address}")
 
@@ -47,10 +63,10 @@ begin
       request = Net::HTTP::Get.new uri.request_uri
       response = http.request request
       if response.is_a? Net::HTTPOK and "success".eql? response.body
-        $log.info "Successfully updated record_id=#{record_id} " \
+        $log.info "Successfully updated record_id=#{record_id} ip_address='#{ip_address}' " \
                   "http_response_body=#{response.body}"
       else
-        $log.error "Update request failed for record_id=#{record_id} " \
+        $log.error "Update request failed for record_id=#{record_id} ip_address='#{ip_address}' " \
                    "HTTP #{response.code} #{response.body}"
         exit_code = 1
       end
