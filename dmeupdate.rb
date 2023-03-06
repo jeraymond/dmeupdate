@@ -40,7 +40,7 @@ begin
     password = record[:password]
     record_id = record[:record_id]
     $log.info "Updating record #{record_id}"
-    
+
     ip_response = Net::HTTP.get_response(URI(EXT_IP_URL))
     if ip_response.is_a? Net::HTTPOK
       ip_address = ip_response.body
@@ -52,7 +52,7 @@ begin
       exit_code = 1
       next
     end
-    
+
     uri = URI("#{UPDATE_URL}?username=#{username}&password=#{password}" \
               "&id=#{record_id}&ip=#{ip_address}")
 
